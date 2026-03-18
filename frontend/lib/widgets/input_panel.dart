@@ -30,60 +30,26 @@ class InputPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final topic = selectedTopic;
+
     return DecoratedBox(
       decoration: _panelDecoration(),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Explore a topic',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'The left panel explains the concept and collects input. The right panel reacts with a chart or highlighted language structure.',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: topics
-                    .map(
-                      (topic) => _TopicCard(
-                        topic: topic,
-                        isSelected: topic.id == selectedTopic?.id,
-                        isBusy: isBusy,
-                        onTap: () => onTopicSelected(topic.id),
-                      ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 28),
-              if (selectedTopic != null) ...[
-                _SectionHeader(
-                  title: selectedTopic!.title,
-                  badge: selectedTopic!.type.toUpperCase(),
+              if (topic != null) ...[
+                _TopicReading(
+                  topic: topic,
+                  topics: topics,
+                  isBusy: isBusy,
+                  onTopicSelected: onTopicSelected,
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  selectedTopic!.description,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 16),
-                _InfoTile(
-                  label: 'Formula / Structure',
-                  value: selectedTopic!.formula,
-                  accent: selectedTopic!.type == 'chemistry'
-                      ? const Color(0xFF0F766E)
-                      : const Color(0xFFE76F51),
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
               ],
-              if (simulation == null && selectedTopic != null)
+              if (simulation == null && topic != null)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 40),
@@ -106,6 +72,141 @@ class InputPanel extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TopicReading extends StatelessWidget {
+  const _TopicReading({
+    required this.topic,
+    required this.topics,
+    required this.isBusy,
+    required this.onTopicSelected,
+  });
+
+  final TopicSummary topic;
+  final List<TopicSummary> topics;
+  final bool isBusy;
+  final ValueChanged<int> onTopicSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = topic.type == 'chemistry'
+        ? const Color(0xFF0F766E)
+        : const Color(0xFFE76F51);
+    final explanation = _topicExplanation(topic);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 72,
+          height: 5,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: LinearGradient(
+              colors: [accent, accent.withValues(alpha: 0.28)],
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          topic.type.toUpperCase(),
+          style: TextStyle(
+            color: accent,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          topic.title,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: const Color(0xFF1F2D3D),
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          topic.description,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: const Color(0xFF243647),
+            fontWeight: FontWeight.w600,
+            height: 1.65,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...explanation.map(
+          (paragraph) => Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Text(
+              paragraph,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: const Color(0xFF526273),
+                height: 1.75,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        RichText(
+          text: TextSpan(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF526273),
+              height: 1.6,
+            ),
+            children: [
+              TextSpan(
+                text: topic.type == 'chemistry'
+                    ? 'Core formula: '
+                    : 'Core structure: ',
+                style: TextStyle(color: accent, fontWeight: FontWeight.w800),
+              ),
+              TextSpan(text: topic.formula),
+            ],
+          ),
+        ),
+        if (topics.length > 1) ...[
+          const SizedBox(height: 22),
+          Text(
+            'Topics',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: const Color(0xFF1F2D3D),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: topics
+                .map(
+                  (item) => ChoiceChip(
+                    label: Text(item.title),
+                    selected: item.id == topic.id,
+                    onSelected: isBusy ? null : (_) => onTopicSelected(item.id),
+                    selectedColor: accent.withValues(alpha: 0.18),
+                    side: BorderSide(
+                      color: item.id == topic.id
+                          ? accent.withValues(alpha: 0.34)
+                          : const Color(0xFFD8E1E8),
+                    ),
+                    labelStyle: TextStyle(
+                      color: item.id == topic.id
+                          ? accent
+                          : const Color(0xFF526273),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -247,86 +348,6 @@ class _EnglishControls extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _TopicCard extends StatelessWidget {
-  const _TopicCard({
-    required this.topic,
-    required this.isSelected,
-    required this.isBusy,
-    required this.onTap,
-  });
-
-  final TopicSummary topic;
-  final bool isSelected;
-  final bool isBusy;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = topic.type == 'chemistry'
-        ? const Color(0xFF0F766E)
-        : const Color(0xFFE76F51);
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      width: 220,
-      decoration: BoxDecoration(
-        color: isSelected ? accent : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isSelected ? accent : const Color(0xFFE5E7EB),
-        ),
-        boxShadow: [
-          if (isSelected)
-            BoxShadow(
-              color: accent.withValues(alpha: 0.24),
-              blurRadius: 18,
-              offset: const Offset(0, 12),
-            ),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: isBusy ? null : onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                topic.type.toUpperCase(),
-                style: TextStyle(
-                  color: isSelected ? Colors.white70 : accent,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                topic.title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: isSelected ? Colors.white : const Color(0xFF1F2D3D),
-                  fontSize: 20,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                topic.description,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isSelected
-                      ? Colors.white.withValues(alpha: 0.92)
-                      : const Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -484,4 +505,21 @@ String _formatInputName(String value) {
   return words
       .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
       .join(' ');
+}
+
+List<String> _topicExplanation(TopicSummary topic) {
+  switch (topic.type) {
+    case 'chemistry':
+      return const [
+        'This lesson focuses on first-order reaction kinetics, where the speed of the reaction depends on how much reactant is still present. Concentration tells you how much material is available to react, while temperature changes how energetically particles collide and therefore how quickly the reaction proceeds.',
+        'As you adjust the inputs, NexLearn recalculates the rate constant and redraws the concentration-decay curve on the right. That makes it easy to compare slower and faster reactions visually instead of reading the formula alone.',
+      ];
+    case 'english':
+      return const [
+        'This lesson breaks a sentence into its main grammatical parts so you can see how meaning is organized. The subject tells who or what performs the action, the verb shows the action or state, and the object shows who or what receives that action.',
+        'When you type in the input box, the app analyzes the sentence immediately and highlights each role on the right. That visual feedback helps you understand structure, word order, and phrasing at the same time.',
+      ];
+    default:
+      return <String>[topic.description];
+  }
 }

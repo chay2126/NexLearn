@@ -175,10 +175,11 @@ From `frontend/`:
 
 ```powershell
 flutter pub get
-flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
+flutter run -d chrome
 ```
 
-If `API_BASE_URL` is not provided, the Flutter app defaults to `/api`, which is the internal proxy path used by the Render frontend service.
+By default, the Flutter app looks for the API on the current host at port `8000`.
+If your backend runs on a different address, pass `--dart-define=API_BASE_URL=http://127.0.0.1:8000` or your custom backend URL.
 
 ## Optional PostgreSQL And Redis With Docker
 
@@ -216,35 +217,6 @@ $env:REDIS_URL = "redis://localhost:6379/0"
 $env:CORS_ALLOWED_ORIGINS = "http://127.0.0.1:3000,http://localhost:3000"
 uvicorn main:app --reload
 ```
-
-## Render Deployment
-
-The repository includes a root `render.yaml` Blueprint that provisions:
-
-- `nexlearn-api` as a Python web service rooted in `backend/`
-- `nexlearn-frontend` as a Docker-based web service rooted in `frontend/`
-- `nexlearn-db` as a managed Postgres database
-
-### How The Render Setup Works
-
-- The backend runs FastAPI with:
-
-```text
-uvicorn main:app --host 0.0.0.0 --port $PORT
-```
-
-- The frontend Docker image builds the Flutter web app, serves it with Nginx, and proxies browser requests from `/api/*` to the backend over Render's private network.
-- Because of that proxy, the deployed frontend does not need a public backend URL baked into the Flutter build.
-- Redis is optional. The backend falls back to in-memory caching if `REDIS_URL` is not set.
-
-### Deploy On Render
-
-1. Push the repository to GitHub.
-2. In Render, create a new Blueprint instance from the repo root.
-3. Confirm the three resources from `render.yaml`.
-4. Deploy the Blueprint.
-
-If you want to avoid free-instance sleep behavior, change the `plan` values in `render.yaml` before deploying.
 
 ## Testing
 

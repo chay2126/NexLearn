@@ -5,16 +5,43 @@ import 'package:http/http.dart' as http;
 String _normalizeBaseUrl(String value) =>
     value.endsWith('/') ? value.substring(0, value.length - 1) : value;
 
+String _defaultBaseUrl({Uri? currentUri}) {
+  const configuredBaseUrl = String.fromEnvironment('API_BASE_URL');
+  if (configuredBaseUrl.isNotEmpty) {
+    return _normalizeBaseUrl(configuredBaseUrl);
+  }
+
+  final resolvedUri = currentUri ?? Uri.base;
+  final host = resolvedUri.host;
+  if (resolvedUri.scheme == 'file' ||
+      host.isEmpty ||
+      host == '0.0.0.0' ||
+      host == '::1' ||
+      host == '[::1]') {
+    return 'http://127.0.0.1:8000';
+  }
+
+  final scheme = resolvedUri.scheme == 'https' ? 'https' : 'http';
+  return _normalizeBaseUrl(
+    Uri(scheme: scheme, host: host, port: 8000).toString(),
+  );
+}
+
 class ApiService {
   ApiService({http.Client? client, String? baseUrl})
     : _client = client ?? http.Client(),
-      _baseUrl = _normalizeBaseUrl(
-        baseUrl ??
-            const String.fromEnvironment('API_BASE_URL', defaultValue: '/api'),
-      );
+      _baseUrl = resolveBaseUrl(baseUrl: baseUrl);
 
   final http.Client _client;
   final String _baseUrl;
+
+  static String resolveBaseUrl({String? baseUrl, Uri? currentUri}) {
+    if (baseUrl != null && baseUrl.isNotEmpty) {
+      return _normalizeBaseUrl(baseUrl);
+    }
+
+    return _defaultBaseUrl(currentUri: currentUri);
+  }
 
   Future<List<TopicSummary>> fetchTopics() async {
     final payload = await _request(
@@ -86,7 +113,7 @@ class ApiService {
       rethrow;
     } catch (_) {
       throw ApiException(
-        'Could not reach the NexLearn API. For local development, start FastAPI on http://127.0.0.1:8000 and run Flutter with --dart-define=API_BASE_URL=http://127.0.0.1:8000.',
+        'Could not reach the NexLearn API. Start FastAPI on http://127.0.0.1:8000, or set --dart-define=API_BASE_URL=<your-backend-url> if the backend runs elsewhere.',
       );
     }
   }
