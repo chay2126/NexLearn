@@ -1,147 +1,244 @@
-# LearnViz
+# NexLearn
 
-## Project Overview
-LearnViz is a production-oriented full-stack learning platform that combines chemistry simulations with English sentence analysis. The application uses a strict layered architecture: Flutter Web for presentation, FastAPI for the API layer, a dedicated service layer for chemistry and English logic, and a data layer designed for PostgreSQL persistence plus Redis caching.
+NexLearn is a full-stack learning app with two interactive lesson types:
 
-## Problem Statement
-Learning platforms often separate explanations from interactivity. LearnViz addresses that gap by letting learners change inputs and immediately see the consequences:
+- `Chemistry`: a reaction-rate simulator that updates a concentration-decay chart as the learner changes concentration and temperature.
+- `English`: a sentence analyzer that highlights the detected subject, verb, and object in real time.
 
-- `Chemistry`: adjust concentration and temperature and watch a reaction-decay graph update.
-- `English`: type a sentence and see the detected subject, verb, and object highlighted in real time.
+The repository contains a Flutter Web frontend and a FastAPI backend. The backend seeds the lesson data automatically on startup, so the app is usable without manual database setup.
 
-## Solution Approach
-The solution is built around two seeded topics:
+## What The App Does
 
-- `Reaction Rate Dynamics`
-- `Sentence Structure Explorer`
+1. The Flutter app starts on a subject chooser screen.
+2. The user opens either `Chemistry` or `English`.
+3. The frontend loads topic metadata from `GET /topics`.
+4. It fetches the selected topic configuration from `GET /simulation/{topic_id}`.
+5. User input is sent to the backend:
+   - Chemistry uses `POST /chemistry/reaction-rate`
+   - English uses `POST /english/analyze`
+6. The backend validates input, computes the result, caches it for 60 seconds, and returns a `cache_hit` flag.
+7. The frontend renders either a line chart or highlighted sentence output.
 
-The backend exposes topic metadata plus two interactive endpoints. The frontend fetches the available topics, loads the topic-specific simulation configuration, dynamically renders the appropriate input controls, and updates the visualization panel as the backend returns new data.
+## Seeded Lessons
 
-## Architecture Explanation
-### 1. Presentation Layer
-Flutter Web renders the UI, collects user input, and displays line charts or text highlighting.
+| Subject | Topic | Input | Output |
+| --- | --- | --- | --- |
+| Chemistry | Reaction Rate Dynamics | Concentration and temperature sliders | Reaction rate, rate constant, and 25 chart points |
+| English | Sentence Structure Explorer | Free-text sentence input | Subject, verb, object, and rich-text highlighting |
 
-### 2. API Layer
-FastAPI routes handle request validation, dependency injection, and HTTP responses.
+## Tech Stack
 
-### 3. Service Layer
-`chemistry_service.py` contains reaction-rate and graph generation logic based on `C(t) = C0 * e^(-kt)`. `english_service.py` contains sentence parsing and structured highlighting logic.
+- Frontend: Flutter Web, `http`, `fl_chart`
+- Backend: FastAPI, SQLAlchemy, Pydantic
+- Database: SQLite for local development fallback, PostgreSQL for production-style setup
+- Cache: Redis when `REDIS_URL` is configured, otherwise an in-memory cache
+- Tests: `pytest` for backend, Flutter widget tests for frontend
 
-### 4. Data Layer
-PostgreSQL stores seeded `topics` and `simulations` records. Redis caches chemistry and English results for 60 seconds using the required key formats.
+## Repository Structure
 
-## Data Flow
-1. User interacts with Flutter.
-2. Flutter calls FastAPI.
-3. FastAPI invokes the service layer.
-4. The service checks Redis first.
-5. On a cache miss, the service reads topic and simulation metadata from PostgreSQL.
-6. The service computes the result.
-7. The result is cached for 60 seconds.
-8. FastAPI returns the response.
-9. Flutter updates the visualization panel.
-
-## Features
-- Topic catalog and dynamic simulation loading
-- Chemistry sliders driven by backend simulation config
-- English text analysis with RichText highlighting
-- Separated API, service, and data layers
-- SQLAlchemy models for `topics` and `simulations`
-- Redis-style TTL caching for chemistry and English results
-- Responsive two-panel UI
-- Seed data initialization at backend startup
-- Backend API tests and Flutter validation steps
-
-## Backend Structure
 ```text
-backend/
-  main.py
-  database.py
-  redis_client.py
-  models.py
-  routes/
-    topics.py
-    chemistry.py
-    english.py
-  services/
-    chemistry_service.py
-    english_service.py
-  schemas/
-    pydantic_models.py
+.
+|-- backend/
+|   |-- main.py
+|   |-- database.py
+|   |-- models.py
+|   |-- redis_client.py
+|   |-- requirements.txt
+|   |-- routes/
+|   |   |-- chemistry.py
+|   |   |-- english.py
+|   |   `-- topics.py
+|   |-- schemas/
+|   |   `-- pydantic_models.py
+|   |-- services/
+|   |   |-- chemistry_service.py
+|   |   `-- english_service.py
+|   `-- tests/
+|       `-- test_api.py
+|-- frontend/
+|   |-- lib/
+|   |   |-- main.dart
+|   |   |-- screens/
+|   |   |   |-- home_screen.dart
+|   |   |   `-- subject_screen.dart
+|   |   |-- services/
+|   |   |   `-- api_service.dart
+|   |   `-- widgets/
+|   |       |-- input_panel.dart
+|   |       `-- visualization_panel.dart
+|   |-- test/
+|   |   `-- widget_test.dart
+|   `-- web/
+|-- docker-compose.yml
+`-- README.md
 ```
 
-## Frontend Structure
-```text
-frontend/
-  lib/
-    main.dart
-    screens/
-      home_screen.dart
-    widgets/
-      input_panel.dart
-      visualization_panel.dart
-    services/
-      api_service.dart
+## Backend Behavior
+
+### Startup And Data Seeding
+
+- FastAPI calls `init_db()` during app startup.
+- SQLAlchemy creates the tables automatically.
+- If the database is empty, the backend seeds two topics and their simulation configs.
+
+### Chemistry Flow
+
+- Accepts `topic_id`, `concentration`, and `temperature`.
+- Validates the input against the simulation config stored in the database.
+- Uses a first-order decay model with an Arrhenius-inspired rate constant.
+- Returns:
+  - `rate`
+  - `rate_constant`
+  - `graph_points` from `t = 0.0` to `t = 12.0` in `0.5` increments
+  - `formula`
+  - `cache_hit`
+
+Example request:
+
+```json
+{
+  "topic_id": 1,
+  "concentration": 2.5,
+  "temperature": 320.0
+}
 ```
 
-## Setup Steps
-### Backend
-1. Create and activate a virtual environment inside `backend/`.
-2. Install dependencies with `pip install -r requirements.txt`.
-3. Configure production environment variables:
-   `APP_MODE=production`
-   `DATABASE_URL=postgresql+psycopg://learnviz:learnviz@localhost:5432/learnviz`
-   `REDIS_URL=redis://localhost:6379/0`
-4. Start the API from `backend/` with `uvicorn main:app --reload`.
+### English Flow
 
-### Frontend
-1. From `frontend/`, run `flutter pub get`.
-2. Launch the web app with `flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000`.
+- Accepts `topic_id` and a sentence.
+- Normalizes whitespace and rejects empty input.
+- Uses deterministic heuristics to find the verb phrase and split subject and object spans.
+- Returns:
+  - `subject`
+  - `verb`
+  - `object`
+  - `segments` for frontend highlighting
+  - `visualization`
+  - `cache_hit`
 
-## Optional Local Infrastructure
-If Docker is available on your machine, the included `docker-compose.yml` starts PostgreSQL and Redis with persistent volumes.
+Example request:
 
-## Development Phases
-### Phase 1
-Backend scaffold, SQLAlchemy models, startup seeding, Redis abstraction, and API routes.
+```json
+{
+  "topic_id": 2,
+  "sentence": "The student writes a clear summary."
+}
+```
 
-### Phase 2
-Chemistry simulation implemented with formula-driven graph generation and result caching.
+### Caching
 
-### Phase 3
-English sentence analysis implemented with subject/verb/object extraction and caching.
+- TTL is 60 seconds.
+- If `REDIS_URL` is set and Redis is reachable, the backend uses Redis.
+- If Redis is not configured or is unavailable, the backend falls back to an in-memory cache automatically.
 
-### Phase 4
-Flutter Web interface implemented with a responsive two-panel layout, topic-driven inputs, chart rendering, and text highlighting.
+## API Endpoints
 
-### Phase 5
-Integration and validation through backend tests, Flutter analysis, Flutter tests, and a web build.
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Basic health check |
+| `GET` | `/topics` | Returns all seeded topics |
+| `GET` | `/simulation/{topic_id}` | Returns a topic and its simulation config |
+| `POST` | `/chemistry/reaction-rate` | Calculates chemistry results |
+| `POST` | `/english/analyze` | Analyzes sentence structure |
+
+When the backend is running, FastAPI also exposes interactive docs at `http://127.0.0.1:8000/docs`.
+
+## Local Development Setup
+
+### Prerequisites
+
+- Python 3.12 or another recent Python 3 version compatible with the backend dependencies
+- Flutter 3.41.x / Dart 3.11.x or another recent stable Flutter SDK
+
+### 1. Start The Backend
+
+From `backend/`:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Default backend behavior for local development:
+
+- If `APP_MODE` is not `production` and `DATABASE_URL` is unset, SQLAlchemy uses `sqlite:///./nexlearn.db`.
+- That creates the local SQLite file `nexlearn.db` in the `backend/` directory.
+- If `REDIS_URL` is unset, the backend uses the in-memory cache.
+- `CORS_ALLOWED_ORIGINS` defaults to `*`.
+
+### 2. Start The Frontend
+
+From `frontend/`:
+
+```powershell
+flutter pub get
+flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
+```
+
+If `API_BASE_URL` is not provided, the Flutter app still defaults to `http://127.0.0.1:8000`.
+
+## Optional PostgreSQL And Redis With Docker
+
+The repository includes `docker-compose.yml` for local PostgreSQL and Redis:
+
+```powershell
+docker compose up -d
+```
+
+Services started by Compose:
+
+- PostgreSQL on `localhost:5432`
+- Redis on `localhost:6379`
+
+That matches the backend's production-style local connection settings:
+
+- `DATABASE_URL=postgresql+psycopg://nexlearn:nexlearn@localhost:5432/nexlearn`
+- `REDIS_URL=redis://localhost:6379/0`
+
+## Environment Variables
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `APP_MODE` | `development` | Switches between local fallback behavior and production-oriented defaults |
+| `DATABASE_URL` | `sqlite:///./nexlearn.db` in development, local PostgreSQL URL in production if unset | SQLAlchemy connection string |
+| `REDIS_URL` | unset | Enables Redis caching when provided |
+| `CORS_ALLOWED_ORIGINS` | `*` | Comma-separated list of allowed origins |
+
+Example PowerShell configuration for PostgreSQL plus Redis:
+
+```powershell
+$env:APP_MODE = "production"
+$env:DATABASE_URL = "postgresql+psycopg://nexlearn:nexlearn@localhost:5432/nexlearn"
+$env:REDIS_URL = "redis://localhost:6379/0"
+$env:CORS_ALLOWED_ORIGINS = "http://127.0.0.1:3000,http://localhost:3000"
+uvicorn main:app --reload
+```
 
 ## Testing
+
 ### Backend
-From `backend/`, run `pytest tests -q`.
+
+From `backend/`:
+
+```powershell
+python -m pytest tests -q
+```
 
 ### Frontend
-From `frontend/`, run:
 
-- `flutter analyze`
-- `flutter test`
-- `flutter build web`
+From `frontend/`:
 
-## Production Notes
-- The backend is configured for PostgreSQL and Redis through environment variables.
-- In this workspace, the backend can fall back to SQLite and in-memory caching when PostgreSQL or Redis are not available locally. That keeps the app runnable for development and testing without changing the layered architecture.
-- For strict production deployment, set `APP_MODE=production`, provide a PostgreSQL `DATABASE_URL`, and provide a Redis `REDIS_URL`.
+```powershell
+flutter test
+flutter analyze
+flutter build web
+```
 
-## Prompt Evolution
-### Initial Prompt
-Build a production-quality full-stack web application named LearnViz with Flutter Web, FastAPI, PostgreSQL, Redis, chemistry simulations, English analysis, and a strict layered architecture.
+## Current Scope
 
-### Refined Prompt
-Structure the backend into API, service, and data layers; seed topic and simulation data; cache chemistry and English responses with a 60-second TTL; build a responsive two-panel Flutter interface that renders inputs dynamically from backend configuration; and provide setup, testing, and architecture documentation.
-
-### Explanation Of Decisions
-- Seeded topics make the project usable on first start without manual SQL setup.
-- Chemistry logic uses a first-order decay model with an Arrhenius-inspired rate constant so temperature visibly changes the curve.
-- English analysis uses deterministic heuristics instead of an external NLP service to keep the project self-contained.
-- Local development fallbacks were added because the current environment does not include PostgreSQL, Redis, or Docker binaries, while the production path remains PostgreSQL plus Redis.
+- The app currently ships with one seeded chemistry lesson and one seeded English lesson.
+- The English parser is heuristic-based and intentionally lightweight. It is not a full NLP pipeline.
+- The frontend is topic-driven, so more lessons can be added by extending the seeded data and configs.
