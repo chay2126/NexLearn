@@ -37,18 +37,10 @@ jobs:
         env:
           API_BASE_URL: ${{ vars.API_BASE_URL }}
         run: |
-          REPO_NAME="${GITHUB_REPOSITORY#*/}"
-
-          if [[ "$REPO_NAME" == *.github.io ]]; then
-            BASE_HREF="/"
-          else
-            BASE_HREF="/$REPO_NAME/"
-          fi
-
           if [[ -n "$API_BASE_URL" ]]; then
-            flutter build web --release --base-href "$BASE_HREF" --dart-define=API_BASE_URL="$API_BASE_URL"
+            flutter build web --release --base-href / --dart-define=API_BASE_URL="$API_BASE_URL"
           else
-            flutter build web --release --base-href "$BASE_HREF"
+            flutter build web --release --base-href /
           fi
 
       - name: Configure GitHub Pages
