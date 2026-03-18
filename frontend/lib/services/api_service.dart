@@ -2,15 +2,16 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+String _normalizeBaseUrl(String value) =>
+    value.endsWith('/') ? value.substring(0, value.length - 1) : value;
+
 class ApiService {
   ApiService({http.Client? client, String? baseUrl})
     : _client = client ?? http.Client(),
-      _baseUrl =
-          baseUrl ??
-          const String.fromEnvironment(
-            'API_BASE_URL',
-            defaultValue: 'http://127.0.0.1:8000',
-          );
+      _baseUrl = _normalizeBaseUrl(
+        baseUrl ??
+            const String.fromEnvironment('API_BASE_URL', defaultValue: '/api'),
+      );
 
   final http.Client _client;
   final String _baseUrl;
@@ -85,7 +86,7 @@ class ApiService {
       rethrow;
     } catch (_) {
       throw ApiException(
-        'Could not reach the NexLearn API. Start FastAPI on http://127.0.0.1:8000.',
+        'Could not reach the NexLearn API. For local development, start FastAPI on http://127.0.0.1:8000 and run Flutter with --dart-define=API_BASE_URL=http://127.0.0.1:8000.',
       );
     }
   }
