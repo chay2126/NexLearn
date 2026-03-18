@@ -249,6 +249,8 @@ video link: https://youtu.be/yy2A6TCSdxA
 ### Live link of the website 
 https://nexlearn.chaitanya999.online/
 
+Note: When accessing the live link, please allow up to 5 minutes for the application to fully render.
+
 ## Current Scope
 
 - The app currently ships with one seeded chemistry lesson and one seeded English lesson.
