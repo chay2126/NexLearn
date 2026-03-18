@@ -2,8 +2,21 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../config.dart';
+
 String _normalizeBaseUrl(String value) =>
     value.endsWith('/') ? value.substring(0, value.length - 1) : value;
+
+bool _isLocalRequest(Uri uri) {
+  final host = uri.host;
+  return uri.scheme == 'file' ||
+      host.isEmpty ||
+      host == 'localhost' ||
+      host == '127.0.0.1' ||
+      host == '0.0.0.0' ||
+      host == '::1' ||
+      host == '[::1]';
+}
 
 String _defaultBaseUrl({Uri? currentUri}) {
   const configuredBaseUrl = String.fromEnvironment('API_BASE_URL');
@@ -12,18 +25,17 @@ String _defaultBaseUrl({Uri? currentUri}) {
   }
 
   final resolvedUri = currentUri ?? Uri.base;
-  final host = resolvedUri.host;
-  if (resolvedUri.scheme == 'file' ||
-      host.isEmpty ||
-      host == '0.0.0.0' ||
-      host == '::1' ||
-      host == '[::1]') {
+  if (_isLocalRequest(resolvedUri)) {
     return 'http://127.0.0.1:8000';
+  }
+
+  if (API_URL.isNotEmpty) {
+    return _normalizeBaseUrl(API_URL);
   }
 
   final scheme = resolvedUri.scheme == 'https' ? 'https' : 'http';
   return _normalizeBaseUrl(
-    Uri(scheme: scheme, host: host, port: 8000).toString(),
+    Uri(scheme: scheme, host: resolvedUri.host, port: 8000).toString(),
   );
 }
 
