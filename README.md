@@ -237,6 +237,15 @@ flutter test
 flutter analyze
 flutter build web
 ```
+## Prompt Evolution
+Initial start with ChatGPT for task understanding 
+https://chatgpt.com/share/69ba6b59-4e4c-8013-a06f-eb9c50e156f8
+
+Later, the prompts continue in the codex CLI
+
+##Video Demo
+video link: https://youtu.be/yy2A6TCSdxA
+
 
 ## Current Scope
 
