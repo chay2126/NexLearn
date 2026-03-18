@@ -246,6 +246,8 @@ Later, the prompts continue in the codex CLI
 ## Video Demo
 video link: https://youtu.be/yy2A6TCSdxA
 
+### Live link of the website 
+https://nexlearn.chaitanya999.online/
 
 ## Current Scope
 
