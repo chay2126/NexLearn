@@ -1,3 +1,5 @@
+import 'chat_widget.dart';
+
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
@@ -15,6 +17,7 @@ class InputPanel extends StatelessWidget {
     required this.onTopicSelected,
     required this.onChemistryChanged,
     required this.onEnglishChanged,
+    required this.apiService,
   });
 
   final List<TopicSummary> topics;
@@ -27,6 +30,7 @@ class InputPanel extends StatelessWidget {
   final ValueChanged<int> onTopicSelected;
   final void Function(String name, double value) onChemistryChanged;
   final ValueChanged<String> onEnglishChanged;
+  final ApiService apiService;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +72,16 @@ class InputPanel extends StatelessWidget {
                   analysis: englishAnalysis,
                   onChanged: onEnglishChanged,
                 ),
+              // ── AI Chatbot ──────────────────────────
+              if (selectedTopic != null) ...[
+                const SizedBox(height: 32),
+                const Divider(height: 1),
+                const SizedBox(height: 24),
+                ChatWidget(
+                  topicId: selectedTopic!.id,
+                  apiService: apiService,
+                ),
+              ],  
             ],
           ),
         ),

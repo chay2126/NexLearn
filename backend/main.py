@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -10,6 +13,7 @@ from database import init_db
 from routes.chemistry import router as chemistry_router
 from routes.english import router as english_router
 from routes.topics import router as topics_router
+from routes.chat import router as chat_router
 
 
 @asynccontextmanager
@@ -42,7 +46,7 @@ app.add_middleware(
 app.include_router(topics_router)
 app.include_router(chemistry_router)
 app.include_router(english_router)
-
+app.include_router(chat_router)
 
 @app.get("/health")
 def healthcheck() -> dict[str, str]:

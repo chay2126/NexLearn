@@ -78,3 +78,15 @@ class EnglishResponse(BaseModel):
     visualization: str
     cache_hit: bool
 
+class ChatMessage(BaseModel):
+    role: str        # "user" or "model"
+    content: str
+
+class ChatRequest(BaseModel):
+    topic_id: int = Field(ge=1)
+    message: str = Field(min_length=1, max_length=1000)
+    history: list[ChatMessage] = Field(default_factory=list)
+
+class ChatResponse(BaseModel):
+    reply: str
+    cache_hit: bool

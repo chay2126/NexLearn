@@ -129,6 +129,24 @@ class ApiService {
       );
     }
   }
+  Future<ChatResponse> sendChatMessage({
+  required int topicId,
+  required String message,
+  required List<ChatMessage> history,
+}) async {
+  final payload = await _request(
+    () => _client.post(
+      Uri.parse('$_baseUrl/chat/message'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'topic_id': topicId,
+        'message': message,
+        'history': history.map((m) => m.toJson()).toList(),
+      }),
+    ),
+  );
+  return ChatResponse.fromJson(payload as Map<String, dynamic>);
+}
 }
 
 class ApiException implements Exception {
@@ -317,6 +335,31 @@ class TextSegment {
     return TextSegment(
       text: json['text'] as String,
       role: json['role'] as String,
+    );
+  }
+}
+class ChatMessage {
+  const ChatMessage({required this.role, required this.content});
+
+  final String role;
+  final String content;
+
+  Map<String, dynamic> toJson() => {
+    'role': role,
+    'content': content,
+  };
+}
+
+class ChatResponse {
+  const ChatResponse({required this.reply, required this.cacheHit});
+
+  final String reply;
+  final bool cacheHit;
+
+  factory ChatResponse.fromJson(Map<String, dynamic> json) {
+    return ChatResponse(
+      reply: json['reply'] as String,
+      cacheHit: json['cache_hit'] as bool,
     );
   }
 }

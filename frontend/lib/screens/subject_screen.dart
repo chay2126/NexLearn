@@ -296,6 +296,7 @@ class _SubjectScreenState extends State<SubjectScreen> {
                         onTopicSelected: _selectTopic,
                         onChemistryChanged: _handleChemistryValueChanged,
                         onEnglishChanged: _handleEnglishChanged,
+                        apiService: _apiService,
                       );
                       final visualizationPanel = VisualizationPanel(
                         selectedTopic: _selectedTopic,

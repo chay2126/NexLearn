@@ -76,8 +76,9 @@ class HomeScreen extends StatelessWidget {
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 920;
-                  final spacing = isWide ? 24.0 : 0.0;
+                  // ── lowered breakpoint so cards go side-by-side sooner ──
+                  final isWide = constraints.maxWidth >= 600;
+                  final spacing = isWide ? 20.0 : 0.0;
                   final cardWidth = isWide
                       ? (constraints.maxWidth - spacing) / 2
                       : constraints.maxWidth;
@@ -95,13 +96,14 @@ class HomeScreen extends StatelessWidget {
                             constraints.maxHeight - (verticalPadding * 2),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        // ── stretch so header fills full width ──
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           const _HomeHeader(),
                           const SizedBox(height: 24),
                           Wrap(
                             spacing: spacing,
-                            runSpacing: 18,
+                            runSpacing: 20,
                             children: subjects
                                 .map(
                                   (subject) => SizedBox(
@@ -155,7 +157,8 @@ class _HomeHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: EdgeInsets.all(isWide ? 30 : 22),
+      width: double.infinity, // ── always stretch full width ──
+      padding: EdgeInsets.all(isWide ? 36 : 24),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(34),
@@ -195,14 +198,11 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: Text(
-              'Pick the subject that matches how you want to learn today. Each card opens a focused workspace with interactive feedback instead of a static lesson.',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF32485C),
-                fontSize: isWide ? 18 : 16,
-              ),
+          Text(
+            'Pick the subject that matches how you want to learn today. Each card opens a focused workspace with interactive feedback instead of a static lesson.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: const Color(0xFF32485C),
+              fontSize: isWide ? 18 : 16,
             ),
           ),
           const SizedBox(height: 22),
@@ -266,189 +266,134 @@ class _SubjectCardState extends State<_SubjectCard> {
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
         scale: _isHovered ? 1.015 : 1,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          constraints: const BoxConstraints(minHeight: 380),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(34),
-            boxShadow: [
-              BoxShadow(
-                color: spec.accent.withValues(alpha: _isHovered ? 0.28 : 0.18),
-                blurRadius: _isHovered ? 40 : 28,
-                offset: Offset(0, _isHovered ? 24 : 18),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              gradient: LinearGradient(
+                colors: spec.gradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const BoxShadow(
-                color: Color(0x120F172A),
-                blurRadius: 24,
-                offset: Offset(0, 16),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(34),
-            child: Material(
-              color: Colors.transparent,
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: spec.gradientColors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(
-                      alpha: _isHovered ? 0.44 : 0.24,
-                    ),
-                    width: 1.1,
+              boxShadow: [
+                BoxShadow(
+                  color: spec.gradientColors.first.withValues(alpha: 0.38),
+                  blurRadius: _isHovered ? 36 : 24,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -30,
+                  right: -30,
+                  child: _CardGlow(
+                    size: 180,
+                    color: spec.accent.withValues(alpha: 0.25),
                   ),
                 ),
-                child: InkWell(
-                  onTap: widget.onTap,
-                  borderRadius: BorderRadius.circular(34),
-                  splashColor: Colors.white.withValues(alpha: 0.08),
-                  highlightColor: Colors.white.withValues(alpha: 0.05),
-                  child: Stack(
+                Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Positioned(
-                        top: -32,
-                        right: -30,
-                        child: _CardGlow(
-                          size: 180,
-                          color: Colors.white.withValues(alpha: 0.16),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: -46,
-                        left: -24,
-                        child: _CardGlow(
-                          size: 150,
-                          color: spec.accent.withValues(alpha: 0.25),
-                        ),
-                      ),
-                      Positioned(
-                        top: 88,
-                        right: 24,
-                        child: Transform.rotate(
-                          angle: -0.18,
-                          child: Container(
-                            width: 96,
-                            height: 96,
+                      Row(
+                        children: [
+                          _CardEyebrow(label: spec.eyebrow),
+                          const Spacer(),
+                          Container(
+                            width: 48,
+                            height: 48,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(28),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.12),
-                              ),
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(16),
                             ),
+                            child: Icon(
+                              spec.icon,
+                              color: Colors.white,
+                              size: 26,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Text(spec.title, style: titleStyle),
+                      const SizedBox(height: 12),
+                      Text(spec.subtitle, style: subtitleStyle),
+                      const SizedBox(height: 20),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: spec.highlights
+                            .map((h) => _HighlightChip(label: h))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        child: IntrinsicHeight(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _CardMetric(
+                                  label: spec.detailLabel,
+                                  value: spec.detailValue,
+                                ),
+                              ),
+                              VerticalDivider(
+                                color: Colors.white.withValues(alpha: 0.12),
+                                thickness: 1,
+                                indent: 14,
+                                endIndent: 14,
+                              ),
+                              Expanded(
+                                child: _CardMetric(
+                                  label: spec.outcomeLabel,
+                                  value: spec.outcomeValue,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(28),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _CardEyebrow(label: spec.eyebrow),
-                                const Spacer(),
-                                Container(
-                                  width: 74,
-                                  height: 74,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.14),
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.18,
-                                      ),
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    spec.icon,
-                                    size: 36,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 26),
-                            Text(spec.title, style: titleStyle),
-                            const SizedBox(height: 12),
-                            Text(spec.subtitle, style: subtitleStyle),
-                            const SizedBox(height: 22),
-                            Wrap(
-                              spacing: 10,
-                              runSpacing: 10,
-                              children: spec.highlights
-                                  .map(
-                                    (highlight) =>
-                                        _HighlightChip(label: highlight),
-                                  )
-                                  .toList(),
-                            ),
-                            const SizedBox(height: 28),
-                            Container(
-                              padding: const EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.12),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: _CardMetric(
-                                      label: spec.detailLabel,
-                                      value: spec.detailValue,
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 1,
-                                    height: 42,
-                                    color: Colors.white.withValues(alpha: 0.16),
-                                  ),
-                                  Expanded(
-                                    child: _CardMetric(
-                                      label: spec.outcomeLabel,
-                                      value: spec.outcomeValue,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            FilledButton.icon(
-                              onPressed: widget.onTap,
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: spec.accent,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 16,
-                                ),
-                                textStyle: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                              ),
-                              icon: const Icon(Icons.arrow_forward_rounded),
-                              label: Text(spec.buttonLabel),
-                            ),
-                          ],
+                      const SizedBox(height: 24),
+                      OutlinedButton.icon(
+                        onPressed: widget.onTap,
+                        icon: const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 18,
+                        ),
+                        label: Text(spec.buttonLabel),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 22,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -612,7 +557,7 @@ class _CardMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
