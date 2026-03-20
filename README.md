@@ -17,6 +17,8 @@
 
 🔗 **Live Link:** NexLearn.chaitanya999.online
 
+▶️ **Demo Video:** Watch on YouTube → https://youtu.be/yy2A6TCSdxA
+
 ---
 
 ## Screenshots
