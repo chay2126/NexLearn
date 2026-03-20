@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 
 from database import init_db
 from routes.chemistry import router as chemistry_router
@@ -49,5 +50,5 @@ app.include_router(english_router)
 app.include_router(chat_router)
 
 @app.get("/health")
-def healthcheck() -> dict[str, str]:
+def healthcheck():
     return {"status": "ok"}
