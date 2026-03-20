@@ -1,258 +1,210 @@
 # NexLearn
 
-NexLearn is a full-stack learning app with two interactive lesson types:
+> An interactive learning platform where students explore Chemistry and English through live visualizations and an AI-powered tutor.
 
-- `Chemistry`: a reaction-rate simulator that updates a concentration-decay chart as the learner changes concentration and temperature.
-- `English`: a sentence analyzer that highlights the detected subject, verb, and object in real time.
+![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat&logo=flutter&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat&logo=redis&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Gemini_AI-8E75B2?style=flat&logo=google&logoColor=white)
+![Render](https://img.shields.io/badge/Render-46E3B7?style=flat&logo=render&logoColor=black)
+![GitHub Pages](https://img.shields.io/badge/GitHub_Pages-222222?style=flat&logo=github&logoColor=white)
 
-The repository contains a Flutter Web frontend and a FastAPI backend. The backend seeds the lesson data automatically on startup, so the app is usable without manual database setup.
+---
 
-## What The App Does
+## Live Demo
 
-1. The Flutter app starts on a subject chooser screen.
-2. The user opens either `Chemistry` or `English`.
-3. The frontend loads topic metadata from `GET /topics`.
-4. It fetches the selected topic configuration from `GET /simulation/{topic_id}`.
-5. User input is sent to the backend:
-   - Chemistry uses `POST /chemistry/reaction-rate`
-   - English uses `POST /english/analyze`
-6. The backend validates input, computes the result, caches it for 60 seconds, and returns a `cache_hit` flag.
-7. The frontend renders either a line chart or highlighted sentence output.
+🔗 **Live Link:** NexLearn.chaitanya999.online
 
-## Seeded Lessons
+---
 
-| Subject | Topic | Input | Output |
-| --- | --- | --- | --- |
-| Chemistry | Reaction Rate Dynamics | Concentration and temperature sliders | Reaction rate, rate constant, and 25 chart points |
-| English | Sentence Structure Explorer | Free-text sentence input | Subject, verb, object, and rich-text highlighting |
+## Screenshots
+
+### Home Screen
+![Home Screen](screenshots/home_screen.png) (screenshots/home_screen2.png)
+
+### Chemistry — Reaction Rate Dynamics
+![Chemistry Screen](screenshots/chemistry_screen.png)
+
+### English — Sentence Structure Explorer
+![English Screen](screenshots/english_screen.png)
+
+### AI Tutor Chatbot
+![Chatbot](screenshots/chatbot.png)
+
+---
+
+## What It Does
+
+NexLearn gives students a **split-panel workspace** — theory and controls on the left, live visualization on the right. Every input change instantly updates the chart or analysis without a page reload.
+
+### Chemistry — Reaction Rate Dynamics
+Students adjust **concentration** and **temperature** sliders and watch a real-time concentration-decay curve redraw. The backend calculates the Arrhenius rate constant and returns 25 graph points using the formula:
+
+```
+C(t) = C₀ × e^(-kt)
+```
+
+### English — Sentence Structure Explorer
+Students type any English sentence and instantly see it **color-coded** by grammatical role — subject in blue, verb in red, object in green — with a full breakdown below the highlighted sentence.
+
+### AI Tutor
+An embedded chatbot powered by **Google Gemini** sits at the bottom of each lesson. It's scoped to the current topic — if a student asks something unrelated, the tutor redirects them back to the subject.
+
+---
 
 ## Tech Stack
 
-- Frontend: Flutter Web, `http`, `fl_chart`
-- Backend: FastAPI, SQLAlchemy, Pydantic
-- Database: SQLite for local development fallback, PostgreSQL for production-style setup
-- Cache: Redis when `REDIS_URL` is configured, otherwise an in-memory cache
-- Tests: `pytest` for backend, Flutter widget tests for frontend
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | Flutter (Web) | Split-panel UI, live charts, chatbot widget |
+| Backend | Python + FastAPI | REST API, subject logic, Gemini integration |
+| Database | PostgreSQL | Lesson content, simulation config, saved results |
+| Cache | Redis | Computed results cached for 5 minutes |
+| Chemistry engine | Custom Arrhenius model | Rate constant calculation, decay curve generation |
+| English engine | Regex-based parser | Tokenization, verb/subject/object detection |
+| AI Chatbot | Google Gemini 2.5 Flash Lite | Topic-scoped tutoring |
+| Frontend deploy | GitHub Pages | Static Flutter web build |
+| Backend deploy | Render | FastAPI server hosting |
 
-## Repository Structure
+---
 
-```text
-.
-|-- backend/
-|   |-- main.py
-|   |-- database.py
-|   |-- models.py
-|   |-- redis_client.py
-|   |-- requirements.txt
-|   |-- routes/
-|   |   |-- chemistry.py
-|   |   |-- english.py
-|   |   `-- topics.py
-|   |-- schemas/
-|   |   `-- pydantic_models.py
-|   |-- services/
-|   |   |-- chemistry_service.py
-|   |   `-- english_service.py
-|   `-- tests/
-|       `-- test_api.py
-|-- frontend/
-|   |-- lib/
-|   |   |-- main.dart
-|   |   |-- screens/
-|   |   |   |-- home_screen.dart
-|   |   |   `-- subject_screen.dart
-|   |   |-- services/
-|   |   |   `-- api_service.dart
-|   |   `-- widgets/
-|   |       |-- input_panel.dart
-|   |       `-- visualization_panel.dart
-|   |-- test/
-|   |   `-- widget_test.dart
-|   `-- web/
-|-- docker-compose.yml
-`-- README.md
+## Project Structure
+
+```
+NexLearn/
+├── backend/
+│   ├── main.py                      # FastAPI entry point
+│   ├── database.py                  # SQLAlchemy + seed data
+│   ├── models.py                    # Topic & Simulation tables
+│   ├── redis_client.py              # Redis + in-memory cache fallback
+│   ├── routes/
+│   │   ├── topics.py                # GET /topics, GET /simulation/{id}
+│   │   ├── chemistry.py             # POST /chemistry/reaction-rate
+│   │   ├── english.py               # POST /english/analyze
+│   │   └── chat.py                  # POST /chat/message
+│   ├── services/
+│   │   ├── chemistry_service.py     # Arrhenius calculation + graph points
+│   │   ├── english_service.py       # Sentence parsing + segmentation
+│   │   └── chat_service.py          # Gemini API integration
+│   └── schemas/
+│       └── pydantic_models.py       # Request/response models
+│
+└── frontend/
+    └── lib/
+        ├── main.dart                # App entry, theme
+        ├── screens/
+        │   ├── home_screen.dart     # Subject selector
+        │   └── subject_screen.dart  # Split-panel workspace
+        ├── widgets/
+        │   ├── input_panel.dart     # Left panel: theory + controls
+        │   ├── visualization_panel.dart  # Right panel: chart/highlight
+        │   └── chat_widget.dart     # AI tutor chatbot
+        └── services/
+            └── api_service.dart     # HTTP client + data models
 ```
 
-## Backend Behavior
-
-### Startup And Data Seeding
-
-- FastAPI calls `init_db()` during app startup.
-- SQLAlchemy creates the tables automatically.
-- If the database is empty, the backend seeds two topics and their simulation configs.
-
-### Chemistry Flow
-
-- Accepts `topic_id`, `concentration`, and `temperature`.
-- Validates the input against the simulation config stored in the database.
-- Uses a first-order decay model with an Arrhenius-inspired rate constant.
-- Returns:
-  - `rate`
-  - `rate_constant`
-  - `graph_points` from `t = 0.0` to `t = 12.0` in `0.5` increments
-  - `formula`
-  - `cache_hit`
-
-Example request:
-
-```json
-{
-  "topic_id": 1,
-  "concentration": 2.5,
-  "temperature": 320.0
-}
-```
-
-### English Flow
-
-- Accepts `topic_id` and a sentence.
-- Normalizes whitespace and rejects empty input.
-- Uses deterministic heuristics to find the verb phrase and split subject and object spans.
-- Returns:
-  - `subject`
-  - `verb`
-  - `object`
-  - `segments` for frontend highlighting
-  - `visualization`
-  - `cache_hit`
-
-Example request:
-
-```json
-{
-  "topic_id": 2,
-  "sentence": "The student writes a clear summary."
-}
-```
-
-### Caching
-
-- TTL is 60 seconds.
-- If `REDIS_URL` is set and Redis is reachable, the backend uses Redis.
-- If Redis is not configured or is unavailable, the backend falls back to an in-memory cache automatically.
+---
 
 ## API Endpoints
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/health` | Basic health check |
-| `GET` | `/topics` | Returns all seeded topics |
-| `GET` | `/simulation/{topic_id}` | Returns a topic and its simulation config |
-| `POST` | `/chemistry/reaction-rate` | Calculates chemistry results |
-| `POST` | `/english/analyze` | Analyzes sentence structure |
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/topics` | List all topics |
+| GET | `/simulation/{topic_id}` | Get simulation config for a topic |
+| POST | `/chemistry/reaction-rate` | Calculate reaction rate and decay curve |
+| POST | `/english/analyze` | Parse sentence into subject/verb/object |
+| POST | `/chat/message` | Send message to Gemini AI tutor |
+| GET | `/health` | Health check (used to keep Render warm) |
 
-When the backend is running, FastAPI also exposes interactive docs at `http://127.0.0.1:8000/docs`.
+---
 
-## Local Development Setup
+## Caching Strategy
 
-### Prerequisites
+Results are cached in **Redis** (or in-memory as fallback) using a structured key:
 
-- Python 3.12 or another recent Python 3 version compatible with the backend dependencies
-- Flutter 3.41.x / Dart 3.11.x or another recent stable Flutter SDK
+```
+chemistry:topic=1:concentration=1.00:temperature=300.00
+english:the student writes a clear summary
+chat:topic=1:msg=what is reaction rate?
+```
 
-### 1. Start The Backend
+- Chemistry and English results: **5-minute TTL**
+- Chat (single-turn only): **5-minute TTL**
+- Multi-turn chat conversations: **not cached** (history changes every message)
 
-From `backend/`:
+---
 
-```powershell
+## Database Schema
+
+```sql
+-- Topic metadata and lesson content
+CREATE TABLE topics (
+  id          SERIAL PRIMARY KEY,
+  title       VARCHAR(120),
+  description TEXT,
+  type        ENUM('chemistry', 'english'),
+  formula     VARCHAR(255)
+);
+
+-- Simulation configuration per topic
+CREATE TABLE simulations (
+  id       SERIAL PRIMARY KEY,
+  topic_id INT REFERENCES topics(id) ON DELETE CASCADE,
+  config   JSONB   -- inputs, visualization type
+);
+```
+
+---
+
+## Running Locally
+
+### Backend
+
+```bash
+cd backend
 python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+.venv\Scripts\activate       # Windows
+source .venv/bin/activate    # Mac/Linux
+
+pip install -r requirements.txt
+```
+
+Create a `.env` file:
+
+```env
+GEMINI_API_KEY=your_gemini_key
+DATABASE_URL=postgresql://user:pass@localhost:5432/nexlearn
+REDIS_URL=redis://localhost:6379
+```
+
+Start the server:
+
+```bash
 uvicorn main:app --reload
 ```
 
-Default backend behavior for local development:
+API docs available at `http://127.0.0.1:8000/docs`
 
-- If `APP_MODE` is not `production` and `DATABASE_URL` is unset, SQLAlchemy uses `sqlite:///./nexlearn.db`.
-- That creates the local SQLite file `nexlearn.db` in the `backend/` directory.
-- If `REDIS_URL` is unset, the backend uses the in-memory cache.
-- `CORS_ALLOWED_ORIGINS` defaults to `*`.
+### Frontend
 
-### 2. Start The Frontend
-
-From `frontend/`:
-
-```powershell
+```bash
+cd frontend
 flutter pub get
 flutter run -d chrome
 ```
 
-By default, the Flutter app looks for the API on the current host at port `8000`.
-If your backend runs on a different address, pass `--dart-define=API_BASE_URL=http://127.0.0.1:8000` or your custom backend URL.
+---
 
-## Optional PostgreSQL And Redis With Docker
+## Key Design Decisions
 
-The repository includes `docker-compose.yml` for local PostgreSQL and Redis:
+**Why FastAPI?** Async-first, automatic Pydantic validation, and built-in `/docs` — perfect for a learning API that needs clear contracts between frontend and backend.
 
-```powershell
-docker compose up -d
-```
+**Why Redis with in-memory fallback?** The app works without Redis configured — the `InMemoryCache` class handles caching locally. Redis is only needed in production for shared caching across multiple server instances.
 
-Services started by Compose:
+**Why no spaCy?** The English parser uses a custom regex and vocabulary-based approach instead of spaCy to keep the deployment lightweight on Render's free tier. No large model downloads needed on cold start.
 
-- PostgreSQL on `localhost:5432`
-- Redis on `localhost:6379`
+**Why Gemini 2.5 Flash Lite?** Highest free-tier request limits (1,000 req/day) among currently available Gemini models — sufficient for a student learning app without any billing setup.
 
-That matches the backend's production-style local connection settings:
-
-- `DATABASE_URL=postgresql+psycopg://nexlearn:nexlearn@localhost:5432/nexlearn`
-- `REDIS_URL=redis://localhost:6379/0`
-
-## Environment Variables
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `APP_MODE` | `development` | Switches between local fallback behavior and production-oriented defaults |
-| `DATABASE_URL` | `sqlite:///./nexlearn.db` in development, local PostgreSQL URL in production if unset | SQLAlchemy connection string |
-| `REDIS_URL` | unset | Enables Redis caching when provided |
-| `CORS_ALLOWED_ORIGINS` | `*` | Comma-separated list of allowed origins |
-
-Example PowerShell configuration for PostgreSQL plus Redis:
-
-```powershell
-$env:APP_MODE = "production"
-$env:DATABASE_URL = "postgresql+psycopg://nexlearn:nexlearn@localhost:5432/nexlearn"
-$env:REDIS_URL = "redis://localhost:6379/0"
-$env:CORS_ALLOWED_ORIGINS = "http://127.0.0.1:3000,http://localhost:3000"
-uvicorn main:app --reload
-```
-
-## Testing
-
-### Backend
-
-From `backend/`:
-
-```powershell
-python -m pytest tests -q
-```
-
-### Frontend
-
-From `frontend/`:
-
-```powershell
-flutter test
-flutter analyze
-flutter build web
-```
-## Prompt Evolution
-Initial start with ChatGPT for task understanding 
-https://chatgpt.com/share/69ba6b59-4e4c-8013-a06f-eb9c50e156f8
-
-Later, the prompts continue in the codex CLI
-
-## Video Demo
-video link: https://youtu.be/yy2A6TCSdxA
-
-### Live link of the website 
-https://nexlearn.chaitanya999.online/
-
-Note: When accessing the live link, please allow up to 3 minutes for the application to fully render.
-
-## Current Scope
-
-- The app currently ships with one seeded chemistry lesson and one seeded English lesson.
-- The English parser is heuristic-based and intentionally lightweight. It is not a full NLP pipeline.
-- The frontend is topic-driven, so more lessons can be added by extending the seeded data and configs.
+---
