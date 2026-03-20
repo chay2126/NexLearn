@@ -22,16 +22,16 @@
 ## Screenshots
 
 ### Home Screen
-![Home Screen](screenshots/home_screen.png)
+![Home Screen](screenshots/home_screen.png.png)
 
 ### Chemistry — Reaction Rate Dynamics
-![Chemistry Screen](screenshots/chemistry_screen.png)
+![Chemistry Screen](screenshots/chemistry_screen.png.png)
 
 ### English — Sentence Structure Explorer
-![English Screen](screenshots/english_screen.png)
+![English Screen](screenshots/english_screen.png.png)
 
 ### AI Tutor Chatbot
-![Chatbot](screenshots/chatbot.png)
+![Chatbot](screenshots/chatbot.png.png)
 
 ---
 
