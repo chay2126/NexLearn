@@ -22,7 +22,7 @@
 ## Screenshots
 
 ### Home Screen
-![Home Screen](screenshots/home_screen.png) (screenshots/home_screen2.png)
+![Home Screen](screenshots/home_screen.png)
 
 ### Chemistry — Reaction Rate Dynamics
 ![Chemistry Screen](screenshots/chemistry_screen.png)
