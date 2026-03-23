@@ -15,9 +15,9 @@
 
 ## Live Demo
 
-🔗 **Live Link:** NexLearn.chaitanya999.online
+🔗 **Live Link:** Here is the Link → https://nexlearn.chaitanya999.online/
 
-▶️ **Demo Video:** Watch on YouTube → https://youtu.be/yy2A6TCSdxA
+▶️ **Demo Video:** Watch on YouTube → https://youtu.be/1MXL27wRsdQ
 
 ---
 
